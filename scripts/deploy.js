@@ -55,7 +55,14 @@ async function main() {
 	const Accumulator = await ethers.getContractFactory('Accumulator'); 
 	const globAcc = await Accumulator.deploy(issuerReg.address, subAcc.address, accHex, nHex); 
 	await globAcc.deployed();
-	console.log("Global accumulator has been deployed to:", globAcc.address); 
+	console.log("Global accumulator has been deployed to:", globAcc.address);
+
+	// ZKP Verifier contract
+	const Verifier = await ethers.getContractFactory('Groth16Verifier');
+	const zkpVerifier = await Verifier.deploy();
+	await zkpVerifier.deployed();
+	console.log("Groth16Verifier has been deployed to:", zkpVerifier.address);
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

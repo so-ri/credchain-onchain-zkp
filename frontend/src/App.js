@@ -1,7 +1,7 @@
 import './App.css';
 
 import Web3 from 'web3';
-import { contractAbi, contractAddress } from './utils/constants';
+import {contractAbi, contractAddress, verifierAbi, verifierAddress} from "./utils/constants";
 import {  useState } from 'react';
 import * as snarkjs  from "snarkjs";
 import { poseidon3 } from 'poseidon-lite'
@@ -11,6 +11,7 @@ import { poseidon3 } from 'poseidon-lite'
 
 const web3 = new Web3("ws://localhost:8545")
 const didContract = new web3.eth.Contract(contractAbi, contractAddress);
+const verifierContract = new web3.eth.Contract(verifierAbi, verifierAddress);
 
 // attempted to follow this tutorial 
 // https://medium.com/coinmonks/build-a-web-3-application-with-solidity-hardhat-react-and-web3js-61b7ff137885
@@ -124,8 +125,6 @@ function App() {
 
 			const startTime = performance.now();
 
-			const verificationKey = await fetch("/zkFiles/verification_key.json").then((res) => res.json());
-
 			const parsedProof = JSON.parse(proofInput);
 			const {proof, publicSignals} = parsedProof;
 
@@ -147,8 +146,19 @@ function App() {
 			if (JSON.stringify(recomposedPublicSignals) !== JSON.stringify(publicSignals)) {
 				throw new Error("publicInputs mismatch! Proof invalid!");
 			}
-			
-			const isValid = await snarkjs.groth16.verify(verificationKey, recomposedPublicSignals, proof);
+
+			// transform proof and publicInput to Contract input format
+			const callData = await snarkjs.groth16.exportSolidityCallData(proof, recomposedPublicSignals);
+
+			const callDataArray = JSON.parse(`[${callData}]`);
+			const a = callDataArray[0];
+			const b = callDataArray[1];
+			const c = callDataArray[2];
+			const callDataInput = callDataArray[3];
+
+			// on-chain verification
+			let verifier = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"; // Account 3
+			const isValid = await verifierContract.methods.verifyProof(a, b, c, callDataInput).send({from: verifier});
 
 			if (isValid) {
 				setVerificationResult("Proof is valid.");
@@ -249,7 +259,7 @@ function App() {
 
 				{/* VERIFIER SIDE */}
 				<div className='card'>
-					<h2>Verifier</h2>
+					<h2>Verifier (on-chain verification)</h2>
 					<div>
 
 						<div className="form-row">
