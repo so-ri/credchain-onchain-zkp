@@ -27,12 +27,12 @@ contract Groth16Verifier {
     uint256 constant q   = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     // Verification Key data
-    uint256 constant alphax  = 9234460418794186838094244710175049870072351919790860590341673174334048125823;
-    uint256 constant alphay  = 10048397970559871546604621623513252428666573760776738473777694236116483948134;
-    uint256 constant betax1  = 16961138364348646692937841552133154632202560324110733178744488445345778719256;
-    uint256 constant betax2  = 2953444050243125631132279258775921513413106294596537648256478811849314539643;
-    uint256 constant betay1  = 5609468305793600206251605453115819572060505663493582102901414230414840612425;
-    uint256 constant betay2  = 749195412830241514618606808285504611657594244641779357385412798972265135028;
+    uint256 constant alphax  = 11952465966838930909151745751841352858695110960234522073765263262952007683508;
+    uint256 constant alphay  = 11172383886814771517733035632587729830027538146643819546770366431849451084845;
+    uint256 constant betax1  = 7438474704134228224309878696887479163587051683184547200888824184124908779053;
+    uint256 constant betax2  = 8581780075132119633471988441063470593601107420846048581786472327463856166225;
+    uint256 constant betay1  = 20452314166854393969751532422512121700415961314894362569802169049292178102101;
+    uint256 constant betay2  = 976671793128705604704099996482271258745765948630043415869830843202687859303;
     uint256 constant gammax1 = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
     uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
@@ -42,30 +42,27 @@ contract Groth16Verifier {
     uint256 constant deltay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint256 constant deltay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
-
-    uint256 constant IC0x = 3663722441146810624699691381523446218053600209196386744667844962339999494431;
-    uint256 constant IC0y = 11573878563542626447947378783169060240664633053559243244680697081312177655915;
-
-    uint256 constant IC1x = 20865353489295554958960018088335983129018369768424340411373702699962587919572;
-    uint256 constant IC1y = 9117597395921890413281648417456182283241063815408810876048832786099564461373;
-
-    uint256 constant IC2x = 15381861321861318569218968249136777457727317229410031846430618942998617543405;
-    uint256 constant IC2y = 757486692270545469482298383852730660493143201403741529813184891613323705056;
-
-    uint256 constant IC3x = 11132779403062335476901296323939763169672748360867456919800492596370877721990;
-    uint256 constant IC3y = 9068181945431855439881550565726232587555677305194373654491111281479719943143;
-
-    uint256 constant IC4x = 7288945681492534646622976403327534441963529037964306713521793139339643732958;
-    uint256 constant IC4y = 17952721224448313876175345380495292559147493721648163916714233677394653468740;
-
-
+    
+    uint256 constant IC0x = 17036464421043235623585448022216825836851016171071935187480794695720624632262;
+    uint256 constant IC0y = 1797281020538862998014398414367428248393385634647988968529403520141707625624;
+    
+    uint256 constant IC1x = 2011967016524434231730484186499954254145593246201978228662923044520737247699;
+    uint256 constant IC1y = 12493408775481073097225549258335288730990283539011013782787354620146818631778;
+    
+    uint256 constant IC2x = 15662320495422429965878924588853587151744799426995619837837402548479794541990;
+    uint256 constant IC2y = 2982197798001919205627935741990608239312479895727637198257055380359313005447;
+    
+    uint256 constant IC3x = 9581687918332103587333827449405310259941503818188903145310726385684197822321;
+    uint256 constant IC3y = 9982582651569556894996687332710420402320046998659175270959413289206188351978;
+    
+ 
     // Memory data
     uint16 constant pVk = 0;
     uint16 constant pPairing = 128;
 
     uint16 constant pLastMem = 896;
 
-    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[4] calldata _pubSignals) public view returns (bool) {
+    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[3] calldata _pubSignals) public view returns (bool) {
         assembly {
             function checkField(v) {
                 if iszero(lt(v, r)) {
@@ -73,8 +70,8 @@ contract Groth16Verifier {
                     return(0, 0x20)
                 }
             }
-
-        // G1 function to multiply a G1 value(x,y) to value in an address
+            
+            // G1 function to multiply a G1 value(x,y) to value in an address
             function g1_mulAccC(pR, x, y, s) {
                 let success
                 let mIn := mload(0x40)
@@ -107,53 +104,51 @@ contract Groth16Verifier {
                 mstore(_pVk, IC0x)
                 mstore(add(_pVk, 32), IC0y)
 
-            // Compute the linear combination vk_x
-
+                // Compute the linear combination vk_x
+                
                 g1_mulAccC(_pVk, IC1x, IC1y, calldataload(add(pubSignals, 0)))
-
+                
                 g1_mulAccC(_pVk, IC2x, IC2y, calldataload(add(pubSignals, 32)))
-
+                
                 g1_mulAccC(_pVk, IC3x, IC3y, calldataload(add(pubSignals, 64)))
+                
 
-                g1_mulAccC(_pVk, IC4x, IC4y, calldataload(add(pubSignals, 96)))
-
-
-            // -A
+                // -A
                 mstore(_pPairing, calldataload(pA))
                 mstore(add(_pPairing, 32), mod(sub(q, calldataload(add(pA, 32))), q))
 
-            // B
+                // B
                 mstore(add(_pPairing, 64), calldataload(pB))
                 mstore(add(_pPairing, 96), calldataload(add(pB, 32)))
                 mstore(add(_pPairing, 128), calldataload(add(pB, 64)))
                 mstore(add(_pPairing, 160), calldataload(add(pB, 96)))
 
-            // alpha1
+                // alpha1
                 mstore(add(_pPairing, 192), alphax)
                 mstore(add(_pPairing, 224), alphay)
 
-            // beta2
+                // beta2
                 mstore(add(_pPairing, 256), betax1)
                 mstore(add(_pPairing, 288), betax2)
                 mstore(add(_pPairing, 320), betay1)
                 mstore(add(_pPairing, 352), betay2)
 
-            // vk_x
+                // vk_x
                 mstore(add(_pPairing, 384), mload(add(pMem, pVk)))
                 mstore(add(_pPairing, 416), mload(add(pMem, add(pVk, 32))))
 
 
-            // gamma2
+                // gamma2
                 mstore(add(_pPairing, 448), gammax1)
                 mstore(add(_pPairing, 480), gammax2)
                 mstore(add(_pPairing, 512), gammay1)
                 mstore(add(_pPairing, 544), gammay2)
 
-            // C
+                // C
                 mstore(add(_pPairing, 576), calldataload(pC))
                 mstore(add(_pPairing, 608), calldataload(add(pC, 32)))
 
-            // delta2
+                // delta2
                 mstore(add(_pPairing, 640), deltax1)
                 mstore(add(_pPairing, 672), deltax2)
                 mstore(add(_pPairing, 704), deltay1)
@@ -168,22 +163,20 @@ contract Groth16Verifier {
             let pMem := mload(0x40)
             mstore(0x40, add(pMem, pLastMem))
 
-        // Validate that all evaluations ∈ F
-
+            // Validate that all evaluations ∈ F
+            
             checkField(calldataload(add(_pubSignals, 0)))
-
+            
             checkField(calldataload(add(_pubSignals, 32)))
-
+            
             checkField(calldataload(add(_pubSignals, 64)))
+            
 
-            checkField(calldataload(add(_pubSignals, 96)))
-
-
-        // Validate all evaluations
+            // Validate all evaluations
             let isValid := checkPairing(_pA, _pB, _pC, _pubSignals, pMem)
 
             mstore(0, isValid)
-            return(0, 0x20)
-        }
-    }
-}
+             return(0, 0x20)
+         }
+     }
+ }
